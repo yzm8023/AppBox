@@ -39,4 +39,5 @@ dependencies {
 
     //以下为手动添加的依赖
     implementation project(':lib')
+    compile 'com.android.support:multidex:1.0.2'
 }
