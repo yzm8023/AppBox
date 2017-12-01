@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AppBox</string>
+    <string name="tip_app_empty">No application is installed</string>
+    <string name="btn_goto_install">Go to install</string>
 </resources>
