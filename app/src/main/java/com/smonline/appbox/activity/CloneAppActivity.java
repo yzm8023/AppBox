@@ -5,6 +5,10 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 import com.smonline.appbox.R;
@@ -31,6 +35,20 @@ public class CloneAppActivity extends BaseActivity {
     private AppInfoAdapter mAppInfoAdapter;
     private List<AppInfo> mAllAppInfos = new ArrayList<AppInfo>();
 
+    private static final int MSG_SHOW_LIST = 100;
+    private Handler mHandler = new Handler(){
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what){
+                case MSG_SHOW_LIST:
+                    mAppInfoAdapter.notifyDataSetChanged();
+                    break;
+            }
+        }
+    };
+
     public static void gotoClone(Context context){
         Intent intent = new Intent(context, CloneAppActivity.class);
         context.startActivity(intent);
@@ -44,46 +62,57 @@ public class CloneAppActivity extends BaseActivity {
     @Override
     public void onActivityCreate() {
         mPackageManager = VirtualCore.get().getUnHookPackageManager();
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
         mAppInfoAdapter = new AppInfoAdapter(mContext);
         mAppInfoAdapter.setOnItemClickListener(mItemClickListener);
-
-        List<ApplicationInfo> apps = mPackageManager.getInstalledApplications(PackageManager.GET_UNINSTALLED_PACKAGES);
-        ABoxLog.d(TAG, "@onActivityCreate, apps size = " + apps.size());
-        for(ApplicationInfo info : apps){
-            AppInfo appInfo = new AppInfo();
-            appInfo.setAppIcon(info.loadIcon(mPackageManager));
-            appInfo.setAppName(info.loadLabel(mPackageManager).toString());
-            try{
-                PackageInfo pkgInfo = mPackageManager.getPackageInfo(info.packageName, PackageManager.GET_UNINSTALLED_PACKAGES);
-                appInfo.setAppVersion(pkgInfo.versionName);
-            }catch (PackageManager.NameNotFoundException e){
-                e.printStackTrace();
-            }
-            appInfo.setPackageName(info.packageName);
-            appInfo.setApkPath(info.sourceDir);
-            appInfo.setUserApp(filterApp(info));
-            mAllAppInfos.add(appInfo);
-        }
-        ABoxLog.d(TAG, "@onActivityCreate, mAllAppInfos size = " + mAllAppInfos.size());
-        mAppInfoAdapter.setInstalledApps(mAllAppInfos);
         mRecyclerView.setAdapter(mAppInfoAdapter);
-    }
 
+        new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... voids) {
+                List<ApplicationInfo> apps = mPackageManager.getInstalledApplications(PackageManager.GET_UNINSTALLED_PACKAGES);
+                for(ApplicationInfo info : apps){
+                    if(isSystemApp(info)){
+                        continue;
+                    }
+                    AppInfo appInfo = new AppInfo();
+                    appInfo.setAppIcon(info.loadIcon(mPackageManager));
+                    appInfo.setAppName(info.loadLabel(mPackageManager).toString());
+                    try{
+                        PackageInfo pkgInfo = mPackageManager.getPackageInfo(info.packageName, PackageManager.GET_UNINSTALLED_PACKAGES);
+                        appInfo.setAppVersion(pkgInfo.versionName);
+                    }catch (PackageManager.NameNotFoundException e){
+                        e.printStackTrace();
+                    }
+                    appInfo.setPackageName(info.packageName);
+                    appInfo.setApkPath(info.sourceDir);
+                    mAllAppInfos.add(appInfo);
+                    ABoxLog.d(TAG, "@onActivityCreate, appInfo = " + appInfo.toString());
+                }
+                ABoxLog.d(TAG, "@onActivityCreate, mAllAppInfos size = " + mAllAppInfos.size());
+                mAppInfoAdapter.setInstalledApps(mAllAppInfos);
+                mHandler.sendEmptyMessage(MSG_SHOW_LIST);
+                return null;
+            }
+        }.execute();
+    }
 
     private OnItemClickListener mItemClickListener = new OnItemClickListener() {
         @Override
         public void onItemClick(int posoition, AppInfo appInfo) {
-            ABoxLog.d(TAG, "@onItemClick2222222, app = " + appInfo.getPackageName());
+            ABoxLog.d(TAG, "@onItemClick, app = " + appInfo.getPackageName());
+            Intent retIntent = new Intent();
+            retIntent.putExtra("app_name", appInfo.getAppName());
+            retIntent.putExtra("apk_path", appInfo.getApkPath());
+            setResult(200,retIntent);
+            CloneAppActivity.this.finish();
         }
     };
 
-    //判断应用程序是否是用户程序
-    public boolean filterApp(ApplicationInfo info) {
-        //原来是系统应用，用户手动升级
+    public boolean isSystemApp(ApplicationInfo info) {
         if ((info.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
             return true;
-            //用户自己安装的应用程序
-        } else if ((info.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+        } else if ((info.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
             return true;
         }
         return false;

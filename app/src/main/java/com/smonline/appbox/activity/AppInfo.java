@@ -22,8 +22,6 @@ public class AppInfo {
     private String packageName;
     //apk路径
     private String apkPath;
-    //是否是用户app
-    private boolean isUserApp;
 
 
     public AppInfo() {
@@ -41,14 +39,13 @@ public class AppInfo {
 
 
     public AppInfo(Drawable app_icon, String app_name, String app_version,
-                   String packagename, String apkPath, boolean isUserApp) {
+                   String packagename, String apkPath) {
         super();
         this.appIcon = app_icon;
         this.appName = app_name;
         this.appVersion = app_version;
         this.packageName = packagename;
         this.apkPath = apkPath;
-        this.isUserApp = isUserApp;
     }
     public Drawable getAppIcon() {
         return appIcon;
@@ -80,17 +77,11 @@ public class AppInfo {
     public String getApkPath(){
         return this.apkPath;
     }
-    public boolean isUserApp() {
-        return isUserApp;
-    }
-    public void setUserApp(boolean isUserApp) {
-        this.isUserApp = isUserApp;
-    }
 
     @Override
     public String toString() {
         return "AppInfo [appIcon=" + appIcon + ", appName=" + appName
                 + ", appVersion=" + appVersion + ", packageName="
-                + packageName + ", isUserApp=" + isUserApp + "]";
+                + packageName + "]";
     }
 }
