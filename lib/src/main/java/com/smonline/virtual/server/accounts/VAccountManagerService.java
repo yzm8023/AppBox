@@ -34,8 +34,8 @@ import com.smonline.virtual.helper.utils.VLog;
 import com.smonline.virtual.os.VBinder;
 import com.smonline.virtual.os.VEnvironment;
 import com.smonline.virtual.os.VUserHandle;
-import com.smonline.virtual.server.IAccountManager;
 import com.smonline.virtual.server.am.VActivityManagerService;
+import com.smonline.virtual.server.interfaces.IAccountManager;
 import com.smonline.virtual.server.pm.VPackageManagerService;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -62,7 +62,7 @@ import static android.accounts.AccountManager.ERROR_CODE_BAD_ARGUMENTS;
 /**
  * @author Lody
  */
-public class VAccountManagerService extends IAccountManager.Stub {
+public class VAccountManagerService implements IAccountManager {
 
     private static final AtomicReference<VAccountManagerService> sInstance = new AtomicReference<>();
     private static final long CHECK_IN_TIME = 30 * 24 * 60 * 1000L;
@@ -182,16 +182,6 @@ public class VAccountManagerService extends IAccountManager.Stub {
                 }
             }
             return accounts;
-        }
-    }
-
-    @Override
-    public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
-        try {
-            return super.onTransact(code, data, reply, flags);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw e;
         }
     }
 

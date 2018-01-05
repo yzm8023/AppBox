@@ -3,6 +3,7 @@ package com.smonline.virtual.server.pm;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
@@ -19,11 +20,11 @@ import com.smonline.virtual.os.VEnvironment;
 import com.smonline.virtual.os.VUserHandle;
 import com.smonline.virtual.remote.InstallResult;
 import com.smonline.virtual.remote.InstalledAppInfo;
-import com.smonline.virtual.server.IAppManager;
 import com.smonline.virtual.server.accounts.VAccountManagerService;
 import com.smonline.virtual.server.am.BroadcastSystem;
 import com.smonline.virtual.server.am.UidSystem;
 import com.smonline.virtual.server.am.VActivityManagerService;
+import com.smonline.virtual.server.interfaces.IAppManager;
 import com.smonline.virtual.server.interfaces.IAppRequestListener;
 import com.smonline.virtual.server.interfaces.IPackageObserver;
 import com.smonline.virtual.server.pm.parser.PackageParserEx;
@@ -42,7 +43,7 @@ import dalvik.system.DexFile;
 /**
  * @author Lody
  */
-public class VAppManagerService extends IAppManager.Stub {
+public class VAppManagerService implements IAppManager {
 
     private static final String TAG = VAppManagerService.class.getSimpleName();
     private static final AtomicReference<VAppManagerService> sService = new AtomicReference<>();
@@ -513,7 +514,7 @@ public class VAppManagerService extends IAppManager.Stub {
         this.mAppRequestListener = listener;
         if (listener != null) {
             try {
-                listener.asBinder().linkToDeath(new DeathRecipient() {
+                listener.asBinder().linkToDeath(new IBinder.DeathRecipient() {
                     @Override
                     public void binderDied() {
                         listener.asBinder().unlinkToDeath(this, 0);

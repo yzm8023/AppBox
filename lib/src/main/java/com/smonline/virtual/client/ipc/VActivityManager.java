@@ -18,6 +18,7 @@ import com.smonline.virtual.client.core.VirtualCore;
 import com.smonline.virtual.client.env.VirtualRuntime;
 import com.smonline.virtual.client.hook.secondary.ServiceConnectionDelegate;
 import com.smonline.virtual.helper.compat.ActivityManagerCompat;
+import com.smonline.virtual.helper.ipcbus.IPCSingleton;
 import com.smonline.virtual.helper.utils.ComponentUtils;
 import com.smonline.virtual.os.VUserHandle;
 import com.smonline.virtual.remote.AppTaskInfo;
@@ -25,8 +26,7 @@ import com.smonline.virtual.remote.BadgerInfo;
 import com.smonline.virtual.remote.PendingIntentData;
 import com.smonline.virtual.remote.PendingResultData;
 import com.smonline.virtual.remote.VParceledListSlice;
-import com.smonline.virtual.server.IActivityManager;
-import com.smonline.virtual.server.interfaces.IProcessObserver;
+import com.smonline.virtual.server.interfaces.IActivityManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,27 +42,14 @@ public class VActivityManager {
 
     private static final VActivityManager sAM = new VActivityManager();
     private final Map<IBinder, ActivityClientRecord> mActivities = new HashMap<IBinder, ActivityClientRecord>(6);
-    private IActivityManager mRemote;
+    private IPCSingleton<IActivityManager> singleton = new IPCSingleton<>(IActivityManager.class);
 
     public static VActivityManager get() {
         return sAM;
     }
 
     public IActivityManager getService() {
-        if (mRemote == null ||
-                (!mRemote.asBinder().isBinderAlive() && !VirtualCore.get().isVAppProcess())) {
-            synchronized (VActivityManager.class) {
-                final Object remote = getRemoteInterface();
-                mRemote = LocalProxyUtils.genProxy(IActivityManager.class, remote);
-            }
-        }
-        return mRemote;
-    }
-
-
-    private Object getRemoteInterface() {
-        return IActivityManager.Stub
-                .asInterface(ServiceManagerNative.getService(ServiceManagerNative.ACTIVITY));
+        return singleton.get();
     }
 
 
@@ -331,25 +318,9 @@ public class VActivityManager {
         }
     }
 
-    public void registerProcessObserver(IProcessObserver observer) {
-        try {
-            getService().registerProcessObserver(observer);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void killAppByPkg(String pkg, int userId) {
         try {
             getService().killAppByPkg(pkg, userId);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void unregisterProcessObserver(IProcessObserver observer) {
-        try {
-            getService().unregisterProcessObserver(observer);
         } catch (RemoteException e) {
             e.printStackTrace();
         }

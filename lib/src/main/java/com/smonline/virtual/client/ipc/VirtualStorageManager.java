@@ -1,12 +1,11 @@
 package com.smonline.virtual.client.ipc;
 
 
-import android.os.IBinder;
 import android.os.RemoteException;
 
-import com.smonline.virtual.client.core.VirtualCore;
 import com.smonline.virtual.client.env.VirtualRuntime;
-import com.smonline.virtual.server.IVirtualStorageService;
+import com.smonline.virtual.helper.ipcbus.IPCSingleton;
+import com.smonline.virtual.server.interfaces.IVirtualStorageService;
 
 /**
  * @author Lody
@@ -15,7 +14,7 @@ import com.smonline.virtual.server.IVirtualStorageService;
 public class VirtualStorageManager {
 
     private static final VirtualStorageManager sInstance = new VirtualStorageManager();
-    private IVirtualStorageService mRemote;
+    private IPCSingleton<IVirtualStorageService> singleton = new IPCSingleton<>(IVirtualStorageService.class);
 
 
     public static VirtualStorageManager get() {
@@ -24,19 +23,7 @@ public class VirtualStorageManager {
 
 
     public IVirtualStorageService getRemote() {
-        if (mRemote == null ||
-                (!mRemote.asBinder().isBinderAlive() && !VirtualCore.get().isVAppProcess())) {
-            synchronized (this) {
-                Object remote = getRemoteInterface();
-                mRemote = LocalProxyUtils.genProxy(IVirtualStorageService.class, remote);
-            }
-        }
-        return mRemote;
-    }
-
-    private Object getRemoteInterface() {
-        final IBinder binder = ServiceManagerNative.getService(ServiceManagerNative.VS);
-        return IVirtualStorageService.Stub.asInterface(binder);
+        return singleton.get();
     }
 
     public void setVirtualStorage(String packageName, int userId, String vsPath) {

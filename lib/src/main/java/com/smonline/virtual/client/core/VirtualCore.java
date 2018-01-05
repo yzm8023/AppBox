@@ -16,6 +16,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.ConditionVariable;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
@@ -28,17 +29,20 @@ import com.smonline.virtual.client.fixer.ContextFixer;
 import com.smonline.virtual.client.hook.delegate.ComponentDelegate;
 import com.smonline.virtual.client.hook.delegate.PhoneInfoDelegate;
 import com.smonline.virtual.client.hook.delegate.TaskDescriptionDelegate;
-import com.smonline.virtual.client.ipc.LocalProxyUtils;
 import com.smonline.virtual.client.ipc.ServiceManagerNative;
 import com.smonline.virtual.client.ipc.VActivityManager;
 import com.smonline.virtual.client.ipc.VPackageManager;
 import com.smonline.virtual.client.stub.VASettings;
 import com.smonline.virtual.helper.compat.BundleCompat;
+import com.smonline.virtual.helper.ipcbus.IPCBus;
+import com.smonline.virtual.helper.ipcbus.IPCSingleton;
+import com.smonline.virtual.helper.ipcbus.IServerCache;
 import com.smonline.virtual.helper.utils.BitmapUtils;
 import com.smonline.virtual.os.VUserHandle;
 import com.smonline.virtual.remote.InstallResult;
 import com.smonline.virtual.remote.InstalledAppInfo;
-import com.smonline.virtual.server.IAppManager;
+import com.smonline.virtual.server.interfaces.IAppManager;
+import com.smonline.virtual.server.ServiceCache;
 import com.smonline.virtual.server.interfaces.IAppRequestListener;
 import com.smonline.virtual.server.interfaces.IPackageObserver;
 import com.smonline.virtual.server.interfaces.IUiCallback;
@@ -82,7 +86,7 @@ public final class VirtualCore {
      */
     private String processName;
     private ProcessType processType;
-    private IAppManager mService;
+    private IPCSingleton<IAppManager> singleton = new IPCSingleton<>(IAppManager.class);
     private boolean isStartUp;
     private PackageInfo hostPkgInfo;
     private int systemPid;
@@ -178,6 +182,17 @@ public final class VirtualCore {
             mainThread = ActivityThread.currentActivityThread.call();
             unHookPackageManager = context.getPackageManager();
             hostPkgInfo = unHookPackageManager.getPackageInfo(context.getPackageName(), PackageManager.GET_PROVIDERS);
+            IPCBus.initialize(new IServerCache() {
+                @Override
+                public void join(String serverName, IBinder binder) {
+                    ServiceCache.addService(serverName, binder);
+                }
+
+                @Override
+                public IBinder query(String serverName) {
+                    return ServiceManagerNative.getService(serverName);
+                }
+            });
             detectProcessType();
             InvocationStubManager invocationStubManager = InvocationStubManager.getInstance();
             invocationStubManager.init();
@@ -252,19 +267,7 @@ public final class VirtualCore {
     }
 
     private IAppManager getService() {
-        if (mService == null
-                || (!VirtualCore.get().isVAppProcess() && !mService.asBinder().isBinderAlive())) {
-            synchronized (this) {
-                Object remote = getStubInterface();
-                mService = LocalProxyUtils.genProxy(IAppManager.class, remote);
-            }
-        }
-        return mService;
-    }
-
-    private Object getStubInterface() {
-        return IAppManager.Stub
-                .asInterface(ServiceManagerNative.getService(ServiceManagerNative.APP));
+        return singleton.get();
     }
 
     /**
