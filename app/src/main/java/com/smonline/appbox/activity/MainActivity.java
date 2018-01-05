@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.smonline.appbox.R;
 import com.smonline.appbox.utils.ABoxLog;
+import com.smonline.virtual.client.core.InstallStrategy;
 import com.smonline.virtual.client.core.VirtualCore;
 import com.smonline.virtual.client.ipc.VActivityManager;
 import com.smonline.virtual.remote.InstallResult;
@@ -135,7 +136,8 @@ public class MainActivity extends BaseActivity{
 
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    InstallResult installResult = VirtualCore.get().installPackage(apkPath, 0);
+                    int flags = InstallStrategy.COMPARE_VERSION | InstallStrategy.SKIP_DEX_OPT | InstallStrategy.DEPEND_SYSTEM_IF_EXIST;
+                    InstallResult installResult = VirtualCore.get().installPackage(apkPath, flags);
                     ABoxLog.d(TAG, "installResult = " + installResult.isSuccess);
                     if(installResult.isSuccess){
                         loadInstalledApps();
