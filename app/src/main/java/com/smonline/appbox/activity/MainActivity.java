@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -67,6 +68,7 @@ public class MainActivity extends BaseActivity{
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
         mAppInfoAdapter = new AppInfoAdapter(mContext);
         mAppInfoAdapter.setOnItemClickListener(mItemClickListener);
+        mRecyclerView.setAdapter(mAppInfoAdapter);
 
         loadInstalledApps();
 
@@ -74,7 +76,6 @@ public class MainActivity extends BaseActivity{
             mAppInfoAdapter.setInstalledApps(mInstalledAppInfos);
             mAppEmptyTip.setVisibility(View.INVISIBLE);
             mRecyclerView.setVisibility(View.VISIBLE);
-            mRecyclerView.setAdapter(mAppInfoAdapter);
         }else {
             mRecyclerView.setVisibility(View.INVISIBLE);
         }
@@ -103,8 +104,7 @@ public class MainActivity extends BaseActivity{
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.btn_goto_clone:
-                Intent intent = new Intent(mContext, CloneAppActivity.class);
-                startActivityForResult(intent, 0);
+                CloneAppActivity.gotoClone(this);
                 break;
             default:
                 break;
@@ -124,35 +124,43 @@ public class MainActivity extends BaseActivity{
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == 200){
-            final String appName = data.getStringExtra("app_name");
-            final String apkPath = data.getStringExtra("apk_path");
-            new AsyncTask<Void, Void, Void>(){
-                @Override
-                protected void onPreExecute() {
-                    super.onPreExecute();
-                    Toast.makeText(mContext, "正在安装 : " + appName, Toast.LENGTH_SHORT).show();
-                }
 
-                @Override
-                protected Void doInBackground(Void... voids) {
-                    int flags = InstallStrategy.COMPARE_VERSION | InstallStrategy.SKIP_DEX_OPT | InstallStrategy.DEPEND_SYSTEM_IF_EXIST;
-                    InstallResult installResult = VirtualCore.get().installPackage(apkPath, flags);
-                    ABoxLog.d(TAG, "installResult = " + installResult.isSuccess);
-                    if(installResult.isSuccess){
-                        loadInstalledApps();
-                    }
-                    return null;
-                }
+    }
 
-                @Override
-                protected void onPostExecute(Void aVoid) {
-                    super.onPostExecute(aVoid);
-                    Toast.makeText(mContext, appName + "已安装", Toast.LENGTH_SHORT).show();
-                    mAppInfoAdapter.setInstalledApps(mInstalledAppInfos);
-                    mAppInfoAdapter.notifyDataSetChanged();
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        final String appName = intent.getStringExtra("app_name");
+        final String apkPath = intent.getStringExtra("apk_path");
+        ABoxLog.d(TAG, "appName = " + appName + ", apkPath = " + apkPath);
+        if(TextUtils.isEmpty(apkPath)) return;
+        new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                Toast.makeText(mContext, "正在安装 : " + appName, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                int flags = InstallStrategy.COMPARE_VERSION | InstallStrategy.SKIP_DEX_OPT | InstallStrategy.DEPEND_SYSTEM_IF_EXIST;
+                InstallResult installResult = VirtualCore.get().installPackage(apkPath, flags);
+                ABoxLog.d(TAG, "installResult = " + installResult.isSuccess);
+                if(installResult.isSuccess){
+                    loadInstalledApps();
                 }
-            }.execute();
-        }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                Toast.makeText(mContext, appName + "已安装", Toast.LENGTH_SHORT).show();
+                mAppEmptyTip.setVisibility(View.INVISIBLE);
+                mRecyclerView.setVisibility(View.VISIBLE);
+                mAppInfoAdapter.setInstalledApps(mInstalledAppInfos);
+                mAppInfoAdapter.notifyDataSetChanged();
+            }
+        }.execute();
     }
 }

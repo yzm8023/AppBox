@@ -28,6 +28,8 @@ namespace FunctionDef {
     typedef jint (*Function_getCallingUid)(JNIEnv *, jclass);
 
     typedef jint (*Function_audioRecordNativeCheckPermission)(JNIEnv *, jobject, jstring);
+
+    typedef void (*Function_sendSignal)(JNIEnv *, jclass, jint, jint);
 }
 
 using namespace FunctionDef;
@@ -41,6 +43,7 @@ static struct {
     jint api_level;
     jmethodID method_onGetCallingUid;
     jmethodID method_onOpenDexFileNative;
+    jmethodID method_onKillProcess;
 
     void *art_work_around_app_jni_bugs;
 
@@ -70,6 +73,8 @@ static struct {
     } orig_openDexNativeFunc_art;
 
     Function_audioRecordNativeCheckPermission orig_audioRecordNativeCheckPermission;
+    Function_DalvikBridgeFunc orig_sendSignal_dvm;
+    Function_sendSignal orig_sendSignal_art;
 
 } patchEnv;
 
@@ -239,6 +244,19 @@ new_bridge_cameraNativeSetupFunc(const void **args, void *pResult, const void *m
     patchEnv.orig_cameraNativeSetup_dvm(args, pResult, method, self);
 }
 
+static void new_bridge_sendSignal_dvm(const void **args, void *pResult, const void *method, void *self){
+    JNIEnv* env = Environment::current();
+    jint pid = (*((jint *)(args[2])));
+    jint signal = (*((jint *)(args[3])));
+    env->CallStaticVoidMethod(nativeEngineClass.get(), patchEnv.method_onKillProcess, pid, signal);
+    patchEnv.orig_sendSignal_dvm(args, pResult, method, self);
+}
+
+static void new_native_sendSignal_art(JNIEnv *env, jclass jclazz, jint pid, jint signal){
+    env->CallStaticVoidMethod(nativeEngineClass.get(), patchEnv.method_onKillProcess, pid, signal);
+    patchEnv.orig_sendSignal_art(env, jclazz, pid, signal);
+}
+
 void mark() {
     // Do nothing
 };
@@ -361,6 +379,22 @@ replaceAudioRecordNativeCheckPermission(jobject javaMethod, jboolean isArt, int 
     *funPtr = (void *) new_native_audioRecordNativeCheckPermission;
 }
 
+inline void replaceSendSignalMethod(jobject javaMethod, jboolean isArt) {
+    if (!javaMethod) {
+        return;
+    }
+    size_t mtd_sendSignal = (size_t) Environment::current()->FromReflectedMethod(javaMethod);
+    int nativeFuncOffset = patchEnv.native_offset;
+    void **jniFuncPtr = (void **) (mtd_sendSignal + nativeFuncOffset);
+    if (!isArt) {
+        patchEnv.orig_sendSignal_dvm = (Function_DalvikBridgeFunc) (*jniFuncPtr);
+        *jniFuncPtr = (void *) new_bridge_sendSignal_dvm;
+    } else {
+        patchEnv.orig_sendSignal_art = (Function_sendSignal) (*jniFuncPtr);
+        *jniFuncPtr = (void *) new_native_sendSignal_art;
+    }
+}
+
 
 /**
  * Only called once.
@@ -391,6 +425,7 @@ void hookAndroidVM(JArrayClass<jobject> javaMethods,
     patchEnv.method_onOpenDexFileNative = env->GetStaticMethodID(nativeEngineClass.get(),
                                                                  "onOpenDexFileNative",
                                                                  "([Ljava/lang/String;)V");
+    patchEnv.method_onKillProcess = env->GetStaticMethodID(nativeEngineClass.get(), "onKillProcess", "(II)V");
 
     if (isArt) {
         patchEnv.art_work_around_app_jni_bugs = dlsym(soInfo, "art_work_around_app_jni_bugs");
@@ -433,6 +468,7 @@ void hookAndroidVM(JArrayClass<jobject> javaMethods,
     replaceAudioRecordNativeCheckPermission(javaMethods.getElement(
             AUDIO_NATIVE_CHECK_PERMISSION).get(),
                                             isArt, apiLevel);
+    replaceSendSignalMethod(javaMethods.getElement(SEND_SIGNAL).get(), isArt);
 }
 
 void *getDvmOrArtSOHandle() {

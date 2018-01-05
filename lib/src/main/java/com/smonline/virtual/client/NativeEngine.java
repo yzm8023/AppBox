@@ -138,7 +138,7 @@ public class NativeEngine {
         if (sFlag) {
             return;
         }
-        Method[] methods = {NativeMethods.gOpenDexFileNative, NativeMethods.gCameraNativeSetup, NativeMethods.gAudioRecordNativeCheckPermission};
+        Method[] methods = {NativeMethods.gOpenDexFileNative, NativeMethods.gCameraNativeSetup, NativeMethods.gAudioRecordNativeCheckPermission, NativeMethods.gSendSignal};
         try {
             nativeLaunchEngine(methods, VirtualCore.get().getHostPkg(), VirtualRuntime.isArt(), Build.VERSION.SDK_INT, NativeMethods.gCameraMethodType);
         } catch (Throwable e) {
@@ -148,10 +148,7 @@ public class NativeEngine {
     }
 
     public static void onKillProcess(int pid, int signal) {
-        VLog.e(TAG, "killProcess: pid = %d, signal = %d.", pid, signal);
-        if (pid == android.os.Process.myPid()) {
-            VLog.e(TAG, VLog.getStackTraceString(new Throwable()));
-        }
+        VLog.e(TAG, "killProcess: pid = %d, signal = %d.\n%s", pid, signal, VLog.getStackTraceString(new Throwable()));
     }
 
     public static int onGetCallingUid(int originUid) {

@@ -3,6 +3,7 @@ package com.smonline.virtual.client.natives;
 import android.hardware.Camera;
 import android.media.AudioRecord;
 import android.os.Build;
+import android.os.Process;
 
 import java.lang.reflect.Method;
 
@@ -19,6 +20,8 @@ public class NativeMethods {
     public static Method gOpenDexFileNative;
 
     public static Method gAudioRecordNativeCheckPermission;
+
+    public static Method gSendSignal;
 
     public static void init() {
         String methodName =
@@ -79,6 +82,12 @@ public class NativeMethods {
                 mth.setAccessible(true);
                 break;
             }
+        }
+
+        try {
+            gSendSignal = Process.class.getDeclaredMethod("sendSignal", int.class, int.class);
+        }catch (NoSuchMethodException e){
+            e.printStackTrace();
         }
     }
 

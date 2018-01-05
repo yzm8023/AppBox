@@ -101,10 +101,10 @@ public class CloneAppActivity extends BaseActivity {
         @Override
         public void onItemClick(int posoition, AppInfo appInfo) {
             ABoxLog.d(TAG, "@onItemClick, app = " + appInfo.getPackageName());
-            Intent retIntent = new Intent();
+            Intent retIntent = new Intent(CloneAppActivity.this, MainActivity.class);
             retIntent.putExtra("app_name", appInfo.getAppName());
             retIntent.putExtra("apk_path", appInfo.getApkPath());
-            setResult(200,retIntent);
+            startActivity(retIntent);
             CloneAppActivity.this.finish();
         }
     };
