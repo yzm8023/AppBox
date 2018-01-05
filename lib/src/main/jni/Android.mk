@@ -3,7 +3,7 @@ MAIN_LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := abox
 
-LOCAL_CFLAGS := -Wno-error=format-security -fpermissive -DLOG_TAG=\"VA++\"
+LOCAL_CFLAGS := -Wno-error=format-security -fpermissive -DLOG_TAG=\"ABox_Native\"
 LOCAL_CFLAGS += -fno-rtti -fno-exceptions
 
 LOCAL_C_INCLUDES += $(MAIN_LOCAL_PATH)
