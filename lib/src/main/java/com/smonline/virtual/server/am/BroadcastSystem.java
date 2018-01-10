@@ -16,12 +16,14 @@ import android.os.Message;
 import com.smonline.virtual.client.core.VirtualCore;
 import com.smonline.virtual.client.env.SpecialComponentList;
 import com.smonline.virtual.helper.collection.ArrayMap;
+import com.smonline.virtual.helper.utils.Reflect;
 import com.smonline.virtual.helper.utils.VLog;
 import com.smonline.virtual.remote.PendingResultData;
 import com.smonline.virtual.server.pm.PackageSetting;
 import com.smonline.virtual.server.pm.VAppManagerService;
 import com.smonline.virtual.server.pm.parser.VPackage;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -103,7 +105,15 @@ public class BroadcastSystem {
             if (packageInfo != null) {
                 Object receiverResource = LoadedApkHuaWei.mReceiverResource.get(packageInfo);
                 if (receiverResource != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        Map<Integer, List<String>> whiteListMap = Reflect.on(receiverResource).get("mWhiteListMap");
+                        List<String> whiteList = whiteListMap.get(0);
+                        if (whiteList == null) {
+                            whiteList = new ArrayList<>();
+                            whiteListMap.put(0, whiteList);
+                        }
+                        whiteList.add(mContext.getPackageName());
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         if (ReceiverResourceN.mWhiteList != null) {
                             List<String> whiteList = ReceiverResourceN.mWhiteList.get(receiverResource);
                             List<String> newWhiteList = new ArrayList<>();
@@ -114,7 +124,6 @@ public class BroadcastSystem {
                             }
                             ReceiverResourceN.mWhiteList.set(receiverResource, newWhiteList);
                         }
-
                     } else {
                         if (ReceiverResourceM.mWhiteList != null) {
                             String[] whiteList = ReceiverResourceM.mWhiteList.get(receiverResource);
