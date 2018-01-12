@@ -18,7 +18,7 @@
 using namespace facebook::jni;
 
 enum METHODS {
-    OPEN_DEX = 0, CAMERA_SETUP, AUDIO_NATIVE_CHECK_PERMISSION, SEND_SIGNAL
+    OPEN_DEX = 0, CAMERA_SETUP, AUDIO_NATIVE_CHECK_PERMISSION, SEND_SIGNAL, SEND_SIGNAL_QUIET
 };
 
 void hookAndroidVM(JArrayClass<jobject> javaMethods,

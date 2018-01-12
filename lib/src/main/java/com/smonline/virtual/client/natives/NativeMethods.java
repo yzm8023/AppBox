@@ -23,6 +23,8 @@ public class NativeMethods {
 
     public static Method gSendSignal;
 
+    public static Method gSendSignalQuiet;
+
     public static void init() {
         String methodName =
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT ? "openDexFileNative" : "openDexFile";
@@ -86,6 +88,7 @@ public class NativeMethods {
 
         try {
             gSendSignal = Process.class.getDeclaredMethod("sendSignal", int.class, int.class);
+            gSendSignalQuiet = Process.class.getDeclaredMethod("sendSignalQuiet", int.class, int.class);
         }catch (NoSuchMethodException e){
             e.printStackTrace();
         }

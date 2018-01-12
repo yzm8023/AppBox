@@ -74,7 +74,9 @@ static struct {
 
     Function_audioRecordNativeCheckPermission orig_audioRecordNativeCheckPermission;
     Function_DalvikBridgeFunc orig_sendSignal_dvm;
+    Function_DalvikBridgeFunc orig_sendSignalQuiet_dvm;
     Function_sendSignal orig_sendSignal_art;
+    Function_sendSignal orig_sendSignalQuiet_art;
 
 } patchEnv;
 
@@ -252,9 +254,22 @@ static void new_bridge_sendSignal_dvm(const void **args, void *pResult, const vo
     patchEnv.orig_sendSignal_dvm(args, pResult, method, self);
 }
 
+static void new_bridge_sendSignalQuiet_dvm(const void **args, void *pResult, const void *method, void *self){
+    JNIEnv* env = Environment::current();
+    jint pid = (*((jint *)(args[2])));
+    jint signal = (*((jint *)(args[3])));
+    env->CallStaticVoidMethod(nativeEngineClass.get(), patchEnv.method_onKillProcess, pid, signal);
+    patchEnv.orig_sendSignalQuiet_dvm(args, pResult, method, self);
+}
+
 static void new_native_sendSignal_art(JNIEnv *env, jclass jclazz, jint pid, jint signal){
     env->CallStaticVoidMethod(nativeEngineClass.get(), patchEnv.method_onKillProcess, pid, signal);
     patchEnv.orig_sendSignal_art(env, jclazz, pid, signal);
+}
+
+static void new_native_sendSignalQuiet_art(JNIEnv *env, jclass jclazz, jint pid, jint signal){
+    env->CallStaticVoidMethod(nativeEngineClass.get(), patchEnv.method_onKillProcess, pid, signal);
+    patchEnv.orig_sendSignalQuiet_art(env, jclazz, pid, signal);
 }
 
 void mark() {
@@ -395,6 +410,21 @@ inline void replaceSendSignalMethod(jobject javaMethod, jboolean isArt) {
     }
 }
 
+inline void replaceSendSignalQuietMethod(jobject javaMethod, jboolean isArt) {
+    if (!javaMethod) {
+        return;
+    }
+    size_t mtd_sendSignalQuiet = (size_t) Environment::current()->FromReflectedMethod(javaMethod);
+    int nativeFuncOffset = patchEnv.native_offset;
+    void **jniFuncPtr = (void **) (mtd_sendSignalQuiet + nativeFuncOffset);
+    if (!isArt) {
+        patchEnv.orig_sendSignalQuiet_dvm = (Function_DalvikBridgeFunc) (*jniFuncPtr);
+        *jniFuncPtr = (void *) new_bridge_sendSignalQuiet_dvm;
+    } else {
+        patchEnv.orig_sendSignalQuiet_art = (Function_sendSignal) (*jniFuncPtr);
+        *jniFuncPtr = (void *) new_native_sendSignalQuiet_art;
+    }
+}
 
 /**
  * Only called once.
@@ -469,6 +499,7 @@ void hookAndroidVM(JArrayClass<jobject> javaMethods,
             AUDIO_NATIVE_CHECK_PERMISSION).get(),
                                             isArt, apiLevel);
     replaceSendSignalMethod(javaMethods.getElement(SEND_SIGNAL).get(), isArt);
+    replaceSendSignalQuietMethod(javaMethods.getElement(SEND_SIGNAL_QUIET).get(), isArt);
 }
 
 void *getDvmOrArtSOHandle() {
