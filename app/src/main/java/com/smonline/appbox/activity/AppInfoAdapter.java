@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.smonline.appbox.R;
+import com.smonline.appbox.utils.ABoxLog;
 
 import java.util.List;
 
@@ -60,17 +61,24 @@ public class AppInfoAdapter extends RecyclerView.Adapter<AppInfoAdapter.ViewHold
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         ImageView appIcon;
         TextView appTitle;
+        ImageView menuIcon;
 
         public ViewHolder(View viewItem){
             super(viewItem);
             appIcon = (ImageView) viewItem.findViewById(R.id.app_icon_img);
             appTitle = (TextView) viewItem.findViewById(R.id.app_title_txt);
+            menuIcon = (ImageView) viewItem.findViewById(R.id.menu_icon);
+            menuIcon.setOnClickListener(this);
             viewItem.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            mListener.onItemClick(getLayoutPosition(), mApps.get(getLayoutPosition()));
+            if(v.getId() == R.id.menu_icon){
+                ABoxLog.d("ViewHolder", "======menu_icon==onClick=======");
+            }else {
+                mListener.onItemClick(v, getLayoutPosition(), mApps.get(getLayoutPosition()), false);
+            }
         }
     }
 }

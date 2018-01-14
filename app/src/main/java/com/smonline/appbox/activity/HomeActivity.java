@@ -1,16 +1,24 @@
 package com.smonline.appbox.activity;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,38 +32,26 @@ import com.smonline.virtual.remote.InstalledAppInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import butterknife.BindView;
 import butterknife.OnClick;
-
 
 public class HomeActivity extends BaseActivity{
 
     private static final String TAG = HomeActivity.class.getSimpleName();
 
     @BindView(R.id.btn_goto_clone)
-    Button mGotoInstallBtn;
+    ImageView mGotoInstallImg;
     @BindView(R.id.tip_app_empty)
     TextView mAppEmptyTip;
     @BindView(R.id.recycler_view)
     RecyclerView mRecyclerView;
 
+    private Dialog mLoadingDialog;
     private PackageManager mPackageManager;
     private AppInfoAdapter mAppInfoAdapter;
     private List<AppInfo> mInstalledAppInfos = new ArrayList<AppInfo>();
-
-    private static final int MSG_REFRESG_LIST = 100;
-    private Handler mHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what){
-                case MSG_REFRESG_LIST:
-                    mAppInfoAdapter.notifyDataSetChanged();
-                    break;
-            }
-        }
-    };
 
     public static void goHome(Context context){
         Intent intent = new Intent(context, HomeActivity.class);
@@ -75,6 +71,7 @@ public class HomeActivity extends BaseActivity{
         mRecyclerView.setLayoutManager(new GridLayoutManager(mContext, 3));
         mAppInfoAdapter = new AppInfoAdapter(mContext);
         mAppInfoAdapter.setOnItemClickListener(mItemClickListener);
+        mRecyclerView.addItemDecoration(new MyItemDecoration());
         mRecyclerView.setAdapter(mAppInfoAdapter);
 
         loadInstalledApps();
@@ -85,6 +82,13 @@ public class HomeActivity extends BaseActivity{
             mRecyclerView.setVisibility(View.VISIBLE);
         }else {
             mRecyclerView.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    class MyItemDecoration extends RecyclerView.ItemDecoration {
+        @Override
+        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            outRect.set(1, 1, 1, 1);
         }
     }
 
@@ -120,18 +124,53 @@ public class HomeActivity extends BaseActivity{
 
     private OnItemClickListener mItemClickListener = new OnItemClickListener() {
         @Override
-        public void onItemClick(int posoition, AppInfo appInfo) {
-            ABoxLog.d(TAG, "@onItemClick, app = " + appInfo.getPackageName());
-            Intent intent = VirtualCore.get().getLaunchIntent(appInfo.getPackageName(), 0);
-            ABoxLog.d(TAG, "@onItemClick, intent = " + intent.toString());
-            VActivityManager.get().startActivity(intent, 0);
+        public void onItemClick(View v, int posoition, final AppInfo appInfo, boolean isMenuIcon) {
+            if(isMenuIcon){
+                View contentLayout = LayoutInflater.from(mContext).inflate(R.layout.popup_menu_layout,null);
+                final  PopupWindow popupWindow = new PopupWindow(contentLayout, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                TextView uninstallText = (TextView) contentLayout.findViewById(R.id.menu_uninstall);
+                uninstallText.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(VirtualCore.get().uninstallPackage(appInfo.getPackageName())){
+                            ListIterator<AppInfo> iterator = mInstalledAppInfos.listIterator();
+                            while (iterator.hasNext()){
+                                AppInfo info = iterator.next();
+                                if(info != null && info.getPackageName().equals(appInfo.getPackageName())){
+                                    iterator.remove();
+                                    break;
+                                }
+                            }
+                            mAppInfoAdapter.notifyDataSetChanged();
+                        }else {
+                            Toast.makeText(mContext, mContext.getText(R.string.toast_tip_uninstall_failed), Toast.LENGTH_SHORT).show();
+                        }
+                        popupWindow.dismiss();
+                    }
+                });
+                popupWindow.setContentView(contentLayout);
+                popupWindow.setFocusable(true);
+                popupWindow.showAsDropDown(v);
+            }else {
+                Intent intent = VirtualCore.get().getLaunchIntent(appInfo.getPackageName(), 0);
+                VActivityManager.get().startActivity(intent, 0);
+            }
         }
     };
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
+    private Dialog createLoadingDialog(Context context, String msg) {
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View v = inflater.inflate(R.layout.dialog_importing, null);
+        LinearLayout layout = (LinearLayout) v.findViewById(R.id.dialog_view);
+        ImageView spaceshipImage = (ImageView) v.findViewById(R.id.img);
+        TextView tipTextView = (TextView) v.findViewById(R.id.tipTextView);
+        Animation hyperspaceJumpAnimation = AnimationUtils.loadAnimation(context, R.anim.loading_animation);
+        spaceshipImage.startAnimation(hyperspaceJumpAnimation);
+        tipTextView.setText(msg);
+        Dialog loadingDialog = new Dialog(context, R.style.loading_dialog);
+        loadingDialog.setCancelable(false);
+        loadingDialog.setContentView(layout, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
+        return loadingDialog;
     }
 
     @Override
@@ -139,13 +178,13 @@ public class HomeActivity extends BaseActivity{
         super.onNewIntent(intent);
         final String appName = intent.getStringExtra("app_name");
         final String apkPath = intent.getStringExtra("apk_path");
-        ABoxLog.d(TAG, "appName = " + appName + ", apkPath = " + apkPath);
         if(TextUtils.isEmpty(apkPath)) return;
         new AsyncTask<Void, Void, Void>(){
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                Toast.makeText(mContext, "正在安装 : " + appName, Toast.LENGTH_SHORT).show();
+                mLoadingDialog = createLoadingDialog(mContext, "正在安装 : " + appName);
+                mLoadingDialog.show();
             }
 
             @Override
@@ -162,12 +201,77 @@ public class HomeActivity extends BaseActivity{
             @Override
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
-                Toast.makeText(mContext, appName + "已安装", Toast.LENGTH_SHORT).show();
                 mAppEmptyTip.setVisibility(View.INVISIBLE);
                 mRecyclerView.setVisibility(View.VISIBLE);
                 mAppInfoAdapter.setInstalledApps(mInstalledAppInfos);
                 mAppInfoAdapter.notifyDataSetChanged();
+                mLoadingDialog.dismiss();
+                mLoadingDialog = null;
             }
         }.execute();
+    }
+
+    public class AppInfoAdapter extends RecyclerView.Adapter<AppInfoAdapter.ViewHolder>{
+
+        private Context mContext;
+        private List<AppInfo> mApps;
+        private OnItemClickListener mListener;
+
+        public AppInfoAdapter(Context context){
+            this.mContext = context;
+        }
+
+        public void setInstalledApps(List<AppInfo> apps){
+            this.mApps = apps;
+        }
+
+        public void setOnItemClickListener(OnItemClickListener listener){
+            this.mListener = listener;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(mContext).inflate(R.layout.app_repo_item, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            AppInfo appInfo = mApps.get(position);
+            if(appInfo != null){
+                Drawable icon = appInfo.getAppIcon();
+                CharSequence title = appInfo.getAppName();
+                holder.appIcon.setImageDrawable(icon);
+                holder.appTitle.setText(title);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return mApps != null ? mApps.size() : 0;
+        }
+
+        public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+            ImageView appIcon;
+            TextView appTitle;
+            ImageView menuIcon;
+
+            public ViewHolder(View viewItem){
+                super(viewItem);
+                appIcon = (ImageView) viewItem.findViewById(R.id.app_icon_img);
+                appTitle = (TextView) viewItem.findViewById(R.id.app_title_txt);
+                menuIcon = (ImageView) viewItem.findViewById(R.id.menu_icon);
+                menuIcon.setOnClickListener(this);
+                viewItem.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                boolean isMenuIcon = false;
+                if(v.getId() == R.id.menu_icon)
+                    isMenuIcon = true;
+                mListener.onItemClick(v, getLayoutPosition(), mApps.get(getLayoutPosition()), isMenuIcon);
+            }
+        }
     }
 }

@@ -24,6 +24,6 @@ public class SplashActivity extends AppCompatActivity {
                 HomeActivity.goHome(SplashActivity.this);
                 finish();
             }
-        }, 1000);
+        }, 500);
     }
 }

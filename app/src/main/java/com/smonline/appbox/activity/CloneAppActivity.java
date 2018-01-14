@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 import com.smonline.appbox.R;
 import com.smonline.appbox.utils.ABoxLog;
@@ -99,7 +100,7 @@ public class CloneAppActivity extends BaseActivity {
 
     private OnItemClickListener mItemClickListener = new OnItemClickListener() {
         @Override
-        public void onItemClick(int posoition, AppInfo appInfo) {
+        public void onItemClick(View v, int posoition, AppInfo appInfo, boolean isMenuIcon) {
             ABoxLog.d(TAG, "@onItemClick, app = " + appInfo.getPackageName());
             Intent retIntent = new Intent(CloneAppActivity.this, HomeActivity.class);
             retIntent.putExtra("app_name", appInfo.getAppName());

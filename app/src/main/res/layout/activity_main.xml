@@ -22,11 +22,15 @@
         android:layout_height="match_parent"
         android:visibility="invisible"/>
 
-    <Button
+    <ImageView
         android:id="@+id/btn_goto_clone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_goto_install"
-        android:layout_gravity="bottom|center_horizontal"/>
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="20dp"
+        android:background="@drawable/goto_clone_bg"
+        android:src="@drawable/add"
+        android:elevation="20dp"/>
 
 </FrameLayout>
