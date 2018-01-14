@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.smonline.appbox.activity.MainActivity">
+    android:background="@color/colorBgDark"
+    tools:context="com.smonline.appbox.activity.HomeActivity">
 
     <TextView
         android:id="@+id/tip_app_empty"
@@ -18,7 +19,7 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:visibility="invisible"/>
 
     <Button

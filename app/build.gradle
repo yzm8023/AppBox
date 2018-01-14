@@ -51,4 +51,6 @@ dependencies {
     // Butterknife
     compile 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    // Once
+    compile 'com.jonathanfinerty.once:once:1.2.1'
 }

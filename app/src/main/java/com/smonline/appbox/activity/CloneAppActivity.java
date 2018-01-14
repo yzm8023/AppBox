@@ -8,7 +8,7 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 import com.smonline.appbox.R;
@@ -62,7 +62,7 @@ public class CloneAppActivity extends BaseActivity {
     @Override
     public void onActivityCreate() {
         mPackageManager = VirtualCore.get().getUnHookPackageManager();
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+        mRecyclerView.setLayoutManager(new GridLayoutManager(mContext, 3));
         mAppInfoAdapter = new AppInfoAdapter(mContext);
         mAppInfoAdapter.setOnItemClickListener(mItemClickListener);
         mRecyclerView.setAdapter(mAppInfoAdapter);
@@ -101,7 +101,7 @@ public class CloneAppActivity extends BaseActivity {
         @Override
         public void onItemClick(int posoition, AppInfo appInfo) {
             ABoxLog.d(TAG, "@onItemClick, app = " + appInfo.getPackageName());
-            Intent retIntent = new Intent(CloneAppActivity.this, MainActivity.class);
+            Intent retIntent = new Intent(CloneAppActivity.this, HomeActivity.class);
             retIntent.putExtra("app_name", appInfo.getAppName());
             retIntent.putExtra("apk_path", appInfo.getApkPath());
             startActivity(retIntent);

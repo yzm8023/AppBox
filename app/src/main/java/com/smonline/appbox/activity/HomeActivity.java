@@ -1,12 +1,12 @@
 package com.smonline.appbox.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
@@ -29,9 +29,9 @@ import butterknife.BindView;
 import butterknife.OnClick;
 
 
-public class MainActivity extends BaseActivity{
+public class HomeActivity extends BaseActivity{
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = HomeActivity.class.getSimpleName();
 
     @BindView(R.id.btn_goto_clone)
     Button mGotoInstallBtn;
@@ -57,6 +57,13 @@ public class MainActivity extends BaseActivity{
         }
     };
 
+    public static void goHome(Context context){
+        Intent intent = new Intent(context, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
     @Override
     public int setContentLayout() {
         return R.layout.activity_main;
@@ -65,7 +72,7 @@ public class MainActivity extends BaseActivity{
     @Override
     public void onActivityCreate() {
         mPackageManager = VirtualCore.get().getUnHookPackageManager();
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+        mRecyclerView.setLayoutManager(new GridLayoutManager(mContext, 3));
         mAppInfoAdapter = new AppInfoAdapter(mContext);
         mAppInfoAdapter.setOnItemClickListener(mItemClickListener);
         mRecyclerView.setAdapter(mAppInfoAdapter);

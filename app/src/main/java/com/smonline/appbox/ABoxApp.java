@@ -1,4 +1,4 @@
-package com.smonline.appbox.application;
+package com.smonline.appbox;
 
 import android.content.Context;
 import android.support.multidex.MultiDexApplication;
@@ -6,6 +6,8 @@ import android.support.multidex.MultiDexApplication;
 import com.smonline.appbox.delegate.MyTaskDescriptionDelegate;
 import com.smonline.virtual.client.core.VirtualCore;
 import com.smonline.virtual.client.stub.VASettings;
+
+import jonathanfinerty.once.Once;
 
 /**
  * Created by yzm on 17-11-29.
@@ -22,7 +24,7 @@ public class ABoxApp extends MultiDexApplication {
         virtualCore.initialize(new VirtualCore.VirtualInitializer() {
             @Override
             public void onMainProcess() {
-                super.onMainProcess();
+                Once.initialise(ABoxApp.this);
             }
 
             @Override
