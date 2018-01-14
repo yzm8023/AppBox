@@ -3,6 +3,7 @@ package com.smonline.appbox.application;
 import android.content.Context;
 import android.support.multidex.MultiDexApplication;
 
+import com.smonline.appbox.delegate.MyTaskDescriptionDelegate;
 import com.smonline.virtual.client.core.VirtualCore;
 import com.smonline.virtual.client.stub.VASettings;
 
@@ -12,10 +13,12 @@ import com.smonline.virtual.client.stub.VASettings;
 
 public class ABoxApp extends MultiDexApplication {
 
+    public static String APP_NAME;
+
     @Override
     public void onCreate() {
         super.onCreate();
-        VirtualCore virtualCore = VirtualCore.get();
+        final VirtualCore virtualCore = VirtualCore.get();
         virtualCore.initialize(new VirtualCore.VirtualInitializer() {
             @Override
             public void onMainProcess() {
@@ -24,7 +27,8 @@ public class ABoxApp extends MultiDexApplication {
 
             @Override
             public void onVirtualProcess() {
-                super.onVirtualProcess();
+                //fake task description's icon and title
+                virtualCore.setTaskDescriptionDelegate(new MyTaskDescriptionDelegate());
             }
 
             @Override

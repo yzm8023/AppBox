@@ -73,6 +73,11 @@ public final class VirtualCore {
      */
     private String hostPkgName;
     /**
+     * @YZM
+     * Host app name
+     */
+    private String hostAppName;
+    /**
      * ActivityThread instance
      */
     private Object mainThread;
@@ -166,6 +171,14 @@ public final class VirtualCore {
         return hostPkgName;
     }
 
+    /**
+     * @YZM
+     * @return
+     */
+    public String getHostAppName() {
+        return hostAppName;
+    }
+
     public PackageManager getUnHookPackageManager() {
         return unHookPackageManager;
     }
@@ -248,6 +261,8 @@ public final class VirtualCore {
     private void detectProcessType() {
         // Host package name
         hostPkgName = context.getApplicationInfo().packageName;
+        // @YZM
+        hostAppName = (String) unHookPackageManager.getApplicationLabel(context.getApplicationInfo());
         // Main process name
         mainProcessName = context.getApplicationInfo().processName;
         // Current process name
