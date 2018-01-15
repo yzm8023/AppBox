@@ -4,7 +4,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v7.widget.GridLayoutManager;
@@ -149,6 +151,7 @@ public class HomeActivity extends BaseActivity{
                     }
                 });
                 popupWindow.setContentView(contentLayout);
+                popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 popupWindow.setFocusable(true);
                 popupWindow.showAsDropDown(v);
             }else {

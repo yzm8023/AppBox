@@ -8,7 +8,7 @@
     android:minWidth="180dp"
     android:gravity="center"
     android:padding="10dp"
-    android:background="@android:color/white">
+    android:background="@color/colorBgDark">
     <ImageView
         android:id="@+id/img"
         android:layout_width="wrap_content"
@@ -19,6 +19,8 @@
         android:id="@+id/tipTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:text="数据加载中……" />
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:textColor="@android:color/holo_blue_dark"
+        android:text="@string/dialog_tip_loading" />
 </LinearLayout>
