@@ -449,7 +449,7 @@ void hookAndroidVM(JArrayClass<jobject> javaMethods,
     patchEnv.host_packageName = (char *) env->GetStringUTFChars(packageName,
                                                                 NULL);
     patchEnv.api_level = apiLevel;
-    void *soInfo = getDvmOrArtSOHandle();
+    void *soInfo = getDvmOrArtSOHandle(isArt);
     patchEnv.method_onGetCallingUid = nativeEngineClass->getStaticMethod<jint(jint)>(
             "onGetCallingUid").getId();
     patchEnv.method_onOpenDexFileNative = env->GetStaticMethodID(nativeEngineClass.get(),
@@ -502,12 +502,17 @@ void hookAndroidVM(JArrayClass<jobject> javaMethods,
     replaceSendSignalQuietMethod(javaMethods.getElement(SEND_SIGNAL_QUIET).get(), isArt);
 }
 
-void *getDvmOrArtSOHandle() {
+void *getDvmOrArtSOHandle(jboolean isArt) {
     char so_name[25] = {0};
     __system_property_get("persist.sys.dalvik.vm.lib.2", so_name);
     if (strlen(so_name) == 0) {
         __system_property_get("persist.sys.dalvik.vm.lib", so_name);
     }
+    //@YZM-START 解决Android7.0之后腾讯加固应用无法启动的问题
+    if(strcmp(so_name, "libart.so") == 0 && isArt){
+        strcpy(so_name, "/system/lib/libart.so");
+    }
+    //@YZM-END
     void *soInfo = dlopen(so_name, 0);
     if (!soInfo) {
         soInfo = RTLD_DEFAULT;

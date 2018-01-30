@@ -24,7 +24,7 @@ enum METHODS {
 void hookAndroidVM(JArrayClass<jobject> javaMethods,
                    jstring packageName, jboolean isArt, jint apiLevel, jint cameraMethodType);
 
-void *getDvmOrArtSOHandle();
+void *getDvmOrArtSOHandle(jboolean isArt);
 
 
 #endif //NDK_HOOK_NATIVE_H
