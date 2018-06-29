@@ -8,7 +8,7 @@ import com.smonline.appbox.BuildConfig;
  * Created by yzm on 17-12-1.
  */
 
-public class ABoxLog {
+public class ABoxUtils {
     private static boolean DEBUG = BuildConfig.DEBUG;
     private static final String TAG_PREFIX = "ABox_";
 

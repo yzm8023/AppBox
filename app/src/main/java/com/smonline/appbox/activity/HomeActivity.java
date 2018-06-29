@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -25,10 +24,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.smonline.appbox.R;
-import com.smonline.appbox.utils.ABoxLog;
+import com.smonline.appbox.utils.ABoxUtils;
 import com.smonline.virtual.client.core.InstallStrategy;
 import com.smonline.virtual.client.core.VirtualCore;
-import com.smonline.virtual.client.ipc.VActivityManager;
 import com.smonline.virtual.remote.InstallResult;
 import com.smonline.virtual.remote.InstalledAppInfo;
 
@@ -64,7 +62,7 @@ public class HomeActivity extends BaseActivity{
 
     @Override
     public int setContentLayout() {
-        return R.layout.activity_main;
+        return R.layout.activity_home;
     }
 
     @Override
@@ -155,8 +153,7 @@ public class HomeActivity extends BaseActivity{
                 popupWindow.setFocusable(true);
                 popupWindow.showAsDropDown(v);
             }else {
-                Intent intent = VirtualCore.get().getLaunchIntent(appInfo.getPackageName(), 0);
-                VActivityManager.get().startActivity(intent, 0);
+                LoadingActivity.launchApp(HomeActivity.this, appInfo, 0);
             }
         }
     };
@@ -194,7 +191,7 @@ public class HomeActivity extends BaseActivity{
             protected Void doInBackground(Void... voids) {
                 int flags = InstallStrategy.COMPARE_VERSION | InstallStrategy.SKIP_DEX_OPT | InstallStrategy.DEPEND_SYSTEM_IF_EXIST;
                 InstallResult installResult = VirtualCore.get().installPackage(apkPath, flags);
-                ABoxLog.d(TAG, "installResult = " + installResult.isSuccess);
+                ABoxUtils.d(TAG, "installResult = " + installResult.isSuccess);
                 if(installResult.isSuccess){
                     loadInstalledApps();
                 }

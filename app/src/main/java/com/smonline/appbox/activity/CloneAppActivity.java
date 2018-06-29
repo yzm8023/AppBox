@@ -13,7 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.smonline.appbox.R;
-import com.smonline.appbox.utils.ABoxLog;
+import com.smonline.appbox.utils.ABoxUtils;
 import com.smonline.virtual.client.core.VirtualCore;
 
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public class CloneAppActivity extends BaseActivity {
             protected Void doInBackground(Void... voids) {
                 List<ApplicationInfo> apps = mPackageManager.getInstalledApplications(PackageManager.GET_UNINSTALLED_PACKAGES);
                 for(ApplicationInfo info : apps){
-                    if(isSystemApp(info)){
+                    if(isSystemApp(info) || mContext.getPackageName().equals(info.packageName)){
                         continue;
                     }
                     AppInfo appInfo = new AppInfo();
@@ -88,9 +88,9 @@ public class CloneAppActivity extends BaseActivity {
                     appInfo.setPackageName(info.packageName);
                     appInfo.setApkPath(info.sourceDir);
                     mAllAppInfos.add(appInfo);
-                    ABoxLog.d(TAG, "@onActivityCreate, appInfo = " + appInfo.toString());
+                    ABoxUtils.d(TAG, "@onActivityCreate, appInfo = " + appInfo.toString());
                 }
-                ABoxLog.d(TAG, "@onActivityCreate, mAllAppInfos size = " + mAllAppInfos.size());
+                ABoxUtils.d(TAG, "@onActivityCreate, mAllAppInfos size = " + mAllAppInfos.size());
                 mAppInfoAdapter.setInstalledApps(mAllAppInfos);
                 mHandler.sendEmptyMessage(MSG_SHOW_LIST);
                 return null;
@@ -101,7 +101,7 @@ public class CloneAppActivity extends BaseActivity {
     private OnItemClickListener mItemClickListener = new OnItemClickListener() {
         @Override
         public void onItemClick(View v, int posoition, AppInfo appInfo, boolean isMenuIcon) {
-            ABoxLog.d(TAG, "@onItemClick, app = " + appInfo.getPackageName());
+            ABoxUtils.d(TAG, "@onItemClick, app = " + appInfo.getPackageName());
             Intent retIntent = new Intent(CloneAppActivity.this, HomeActivity.class);
             retIntent.putExtra("app_name", appInfo.getAppName());
             retIntent.putExtra("apk_path", appInfo.getApkPath());

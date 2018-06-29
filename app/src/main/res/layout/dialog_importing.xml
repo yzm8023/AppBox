@@ -21,6 +21,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:gravity="center"
-        android:textColor="@android:color/holo_blue_dark"
-        android:text="@string/dialog_tip_loading" />
+        android:textColor="@android:color/holo_blue_dark" />
 </LinearLayout>

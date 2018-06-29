@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:gravity="bottom"
     android:orientation="vertical"
+    android:background="@color/colorBgDark"
     tools:context=".activity.SplashActivity">
 
     <TextView

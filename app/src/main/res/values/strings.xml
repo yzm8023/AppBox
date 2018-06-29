@@ -1,8 +1,7 @@
 <resources>
     <string name="app_name">应用魔方</string>
-    <string name="tip_app_empty">No application is installed</string>
-    <string name="btn_goto_install">Go to install</string>
-    <string name="pop_menu_uninstall">Uninstall</string>
-    <string name="toast_tip_uninstall_failed">Uninstall failed!</string>
-    <string name="dialog_tip_loading">Loading...</string>
+    <string name="tip_app_empty">尚未安装任何应用</string>
+    <string name="pop_menu_uninstall">卸载</string>
+    <string name="toast_tip_uninstall_failed">卸载失败!</string>
+    <string name="launching_app">"正在启动 %s..."</string>
 </resources>

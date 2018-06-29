@@ -13,7 +13,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".activity.SplashActivity"
-            android:theme="@style/FullScreenTheme">
+            android:theme="@style/FullScreenTheme"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -22,11 +23,19 @@
 
         <activity
             android:name=".activity.HomeActivity"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait">
         </activity>
 
-        <activity android:name=".activity.CloneAppActivity"
-            android:launchMode="singleTask"/>
+        <activity
+            android:name=".activity.CloneAppActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".activity.LoadingActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/FullScreenTheme"/>
     </application>
 
 </manifest>
