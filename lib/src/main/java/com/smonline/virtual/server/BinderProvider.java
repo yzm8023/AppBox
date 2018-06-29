@@ -22,6 +22,7 @@ import com.smonline.virtual.server.interfaces.IAccountManager;
 import com.smonline.virtual.server.interfaces.IActivityManager;
 import com.smonline.virtual.server.interfaces.IAppManager;
 import com.smonline.virtual.server.interfaces.IDeviceInfoManager;
+import com.smonline.virtual.server.interfaces.IJobService;
 import com.smonline.virtual.server.interfaces.INotificationManager;
 import com.smonline.virtual.server.interfaces.IPackageManager;
 import com.smonline.virtual.server.interfaces.IServiceFetcher;
@@ -61,7 +62,7 @@ public final class BinderProvider extends ContentProvider {
         IPCBus.register(IAppManager.class, VAppManagerService.get());
         BroadcastSystem.attach(VActivityManagerService.get(), VAppManagerService.get());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            IPCBus.register(IJobScheduler.class, VJobSchedulerService.get());
+            IPCBus.register(IJobService.class, VJobSchedulerService.get());
         }
         VNotificationManagerService.systemReady(context);
         IPCBus.register(INotificationManager.class, VNotificationManagerService.get());

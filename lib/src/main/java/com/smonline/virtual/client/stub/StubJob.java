@@ -7,11 +7,13 @@ import android.app.job.IJobService;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.smonline.virtual.client.core.InvocationStubManager;
 import com.smonline.virtual.client.hook.proxies.am.ActivityManagerStub;
@@ -64,7 +66,7 @@ public class StubJob extends Service {
                         service.putExtra("_VA_|_user_id_", VUserHandle.getUserId(key.vuid));
                         boolean bound = false;
                         try {
-                            bound = bindService(service, session, 0);
+                            bound = bindService(service, session, Context.BIND_AUTO_CREATE);
                         } catch (Throwable e) {
                             VLog.e(TAG, e);
                         }
@@ -109,11 +111,30 @@ public class StubJob extends Service {
         super.onCreate();
         InvocationStubManager.getInstance().checkEnv(ActivityManagerStub.class);
         mScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+
+        Log.d("Q_M", "StubJob-->onCreate");
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return mService.asBinder();
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        for(int i = 0; i < mJobSessions.size(); i++){
+            int key = mJobSessions.keyAt(i);
+            JobSession session = mJobSessions.get(key);
+            if(session != null){
+                unbindService(session);
+            }
+        }
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     private final class JobSession extends IJobCallback.Stub implements ServiceConnection {

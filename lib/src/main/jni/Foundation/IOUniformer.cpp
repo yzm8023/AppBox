@@ -550,7 +550,7 @@ HOOK_DEF(int, execve, const char *pathname, char *argv[], char *const envp[]) {
      *
      * We will support 64Bit to adopt it.
      */
-    ALOGE("execve : %s", pathname);
+    // ALOGE("execve : %s", pathname); // any output can break exec. See bug: https://issuetracker.google.com/issues/109448553
     int res;
     const char *redirect_path = relocate_path(pathname, &res);
     char *ld = getenv("LD_PRELOAD");
@@ -565,6 +565,7 @@ HOOK_DEF(int, execve, const char *pathname, char *argv[], char *const envp[]) {
         char **new_envp = build_new_env(envp);
         int ret = syscall(__NR_execve, redirect_path, argv, new_envp);
         FREE(redirect_path, pathname);
+        free(new_envp);
         return ret;
     }
     int ret = syscall(__NR_execve, redirect_path, argv, envp);
